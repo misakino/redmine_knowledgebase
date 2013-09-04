@@ -21,12 +21,9 @@ class KnowledgebaseController < ApplicationController
 
     #FIXME the following method still requires ALL records to be loaded before being filtered.
 
-    a = KbArticle.find(:all, :include => :viewings).sort_by(&:view_count)
-    a = a.drop(a.count - summary_limit) if a.count > summary_limit
-    @articles_popular  = a.reverse
-    a = KbArticle.find(:all, :include => :ratings).sort_by(&:rated_count)
-    a = a.drop(a.count - summary_limit) if a.count > summary_limit
-    @articles_toprated = a.reverse
+    @articles_popular = KbArticle.find_by_sql("select * from kb_articles inner join (select viewed_id,count(viewer_id) from viewings group by viewed_id order by count desc) as viewings on (viewings.viewed_id = kb_articles.id) limit #{summary_limit}")
+    @articles_toprated = KbArticle.find_by_sql("select * from kb_articles inner join (select rated_id,rating from ratings order by rating desc)as ratings on (ratings.rated_id = kb_articles.id) limit #{summary_limit}")
+
 
     @tags = KbArticle.tag_counts
 
